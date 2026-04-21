@@ -1,0 +1,30 @@
+Install Chocolatey: (https://chocolatey.org/install)
+in powershell run:
+	Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+Next use chocolatey to install Azure CLI and VSCode (using PowerShell) (if not already installed)
+	choco install azure-cli -y
+	choco install vscode -y
+
+Next Install PowerShell Azure Modules Accounts & Resources (using PowerShell) 
+	Install-Module Az.Accounts
+	Install-Module Az.Resources
+
+Finally use the Azure CLI to install bicep.
+	az bicep install
+	az bicep upgrade
+	az bicep version
+
+Create bicep file main.bicep.
+
+az login
+az account set --subscription <subscription_id>
+
+az group create -n rg-storage-account -l eastus2
+
+# Resource group cloud-shell-storage-westus exists at this subscription
+az deployment group create --resource-group rg-storage-account --template-file main.bicep --parameters location=eastus2
+
+resource group: cloud-shell-storage-westus
+subscription: <subscription_id>
+Location: WestUS

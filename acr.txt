@@ -1,0 +1,4 @@
+
+
+az group create -n rg-acr -l eastus2
+az deployment group create --resource-group rg-acr --template-file acr.bicep --parameters location=eastus2 what-if
