@@ -1,5 +1,5 @@
 on: [workflow_dispatch]
-name: Deploy ACR
+name: Deploy Containerized Web App
 
 jobs:
   build-and-deploy:
