@@ -1,8 +1,11 @@
+@description('Generate a Suffix based on the Resource Group ID')
+param suffix string = uniqueString(resourceGroup().id)
+
 @description('Use the Resource Group Location')
 param location string = resourceGroup().location
 
-resource acr 'Microsoft.ContainerRegistry/registries@2022-12-01' = {
-  name: 'bpsacr001'
+resource acr 'Microsoft.ContainerRegistry/registries@2025-11-01' = {
+  name: 'bpscr${suffix}'
   location: location
   sku: {
     name: 'Basic'

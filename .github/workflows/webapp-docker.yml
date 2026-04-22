@@ -19,11 +19,27 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Deploy Bicep file
-    - name: deploy
+      # Deploy Acr Bicep file
+    - name: Deploy ACR
       uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ secrets.AZURE_RG }}
         template: ./acr/acr.bicep
+        failOnStdErr: false
+
+    - name: Deploy Web App
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./webapp-docker/webapp-docker.bicep
+        failOnStdErr: false
+
+    - name: Assign Acr Pull Role to Web App
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./webapp-docker/assign-acr-pull-to-webapp.bicep
         failOnStdErr: false
