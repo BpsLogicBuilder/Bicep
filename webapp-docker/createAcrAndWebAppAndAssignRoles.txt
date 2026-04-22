@@ -1,0 +1,11 @@
+
+$rg = "rg-docker-webapp"
+az group create -n $rg -l eastus2
+az deployment group what-if --resource-group $rg --template-file acr.bicep --parameters location=eastus2
+az deployment group create --resource-group $rg --template-file acr.bicep --parameters location=eastus2
+
+az deployment group what-if --resource-group $rg --template-file webapp-docker.bicep --parameters location=eastus2
+az deployment group create --resource-group $rg --template-file webapp-docker.bicep --parameters location=eastus2
+
+az deployment group what-if --resource-group $rg --template-file assign-acr-pull-to-webapp.bicep
+az deployment group create --resource-group $rg --template-file assign-acr-pull-to-webapp.bicep
