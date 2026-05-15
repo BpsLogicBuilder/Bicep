@@ -1,0 +1,5 @@
+$rg = "rg-container-app"
+
+az group create -n $rg -l eastus2
+az deployment group what-if --resource-group $rg --template-file container-app.bicep
+az deployment group create --resource-group $rg --template-file container-app.bicep

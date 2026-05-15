@@ -21,9 +21,16 @@ jobs:
 
       # Deploy Bicep file
     - name: deploy
+      id: deployStep
       uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ secrets.AZURE_RG }}
         template: ./acr/acr.bicep
         failOnStdErr: false
+
+      # Build and upload image
+    - name: Upload Image
+      run: |
+        echo "ACR Name ${{ steps.deployStep.outputs.acrLoginServer}}"
+        az acr build --registry ${{ steps.deployStep.outputs.acrLoginServer}} --image webapplication1:v1.0.0 --image webapplication1:latest ./WebApplication1

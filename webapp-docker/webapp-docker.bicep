@@ -27,25 +27,56 @@ resource webApp 'Microsoft.Web/sites@2025-03-01' = {
   properties: {
     siteConfig: {
       acrUseManagedIdentityCreds: true
+      alwaysOn: true
       appSettings: [
-        {
-          name: 'UseOnlyInMemoryDatabase'
-          value: 'true'
-        }
         {
           name: 'ASPNETCORE_ENVIRONMENT'
           value: 'Docker'
         }
         {
           name: 'ASPNETCORE_HTTP_PORTS'
-          value: '80'
+          value: '8080'
+        }
+        {
+          name: 'WEBSITES_PORT'
+          value: '8080'
+        }
+        {
+          name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE'
+          value: 'true'
+        }
+        {
+          name: 'WEBSITES_CONTAINER_START_TIME_LIMIT'
+          value: '230'
         }
       ]
-      linuxFxVersion: 'DOCKER|${acr.properties.loginServer}/eshoponweb/web:latest'
+      linuxFxVersion: 'DOCKER|${acr.properties.loginServer}/webapplication1:latest'
+      http20Enabled: true
+      minimumElasticInstanceCount: 1
+      publicNetworkAccess: 'Enabled'
     }
     serverFarmId: appServicePlan.id
   }
   identity: {
     type: 'SystemAssigned'
+  }
+}
+
+resource webAppLogConfig 'Microsoft.Web/sites/config@2022-09-01' = {
+  parent: webApp
+  name: 'logs'
+  properties: {
+    applicationLogs: {
+      fileSystem: {
+        level: 'Verbose'
+      }
+    }
+    httpLogs: {
+      fileSystem: {
+        enabled: true
+        retentionInDays: 3
+        retentionInMb: 100
+      }
+    }
   }
 }
