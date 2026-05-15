@@ -1,0 +1,11 @@
+$rg = "rg-testbicep"
+az deployment group create --resource-group $rg --template-file acr/acr.bicep
+
+//Look up $acrName from the portal
+$acrName=""
+
+//From repository root folder
+az acr build --registry $acrName --image webapplication1:v1.0.0 --image webapplication1:latest ./WebApplication1
+
+az deployment group create --resource-group $rg --template-file webapp-docker/webapp-docker.bicep
+az deployment group create --resource-group $rg --template-file webapp-docker/assign-acr-pull-to-webapp.bicep

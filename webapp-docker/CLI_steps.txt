@@ -1,0 +1,33 @@
+$rg = "rg-cli"
+$appPlan = "bpsAppPlan05142026"
+$appName = "bps-app-05152026"
+$acrName = "bpsacrcli05152026"
+az acr create --resource-group $rg --name $acrName --sku Basic --output none
+
+//From repository root folder
+az acr build --registry $acrName --image webapplication1:v1.0.0 --image webapplication1:latest ./WebApplication1
+
+//Create web app
+az appservice plan create --resource-group $rg --name $appPlan --sku B1 --is-linux
+az webapp create --resource-group $rg --plan $appPlan --name $appName --container-image-name "$($acrName).azurecr.io/webapplication1:latest"
+
+//Assign managed identty to web app and set permissions
+az webapp identity assign --resource-group $rg --name $appName 
+$PRINCIPAL_ID = az webapp identity show --resource-group $rg --name $appName --query principalId --output tsv
+$ACR_ID = az acr show --resource-group $rg --name $acrName --query id --output tsv
+az role assignment create --assignee $PRINCIPAL_ID --scope $ACR_ID --role AcrPull
+az webapp config set --resource-group $rg --name $appName --acr-use-identity true --acr-identity [system]
+
+//Set the image source
+az webapp config container set --resource-group $rg --name $appName --container-image-name "$($acrName).azurecr.io/webapplication1:latest" --container-registry-url "https://$($acrName).azurecr.io"
+
+//Configure app settings:
+az webapp config appsettings set --resource-group $rg --name $appName --settings WEBSITES_PORT=8080
+az webapp config appsettings set --resource-group $rg --name $appName --settings WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
+az webapp config appsettings set --resource-group $rg --name $appName --settings WEBSITES_CONTAINER_START_TIME_LIMIT=230
+
+//Configure always on and logging
+az webapp config set --resource-group $rg --name $appName --always-on true
+az webapp log config --resource-group $rg --name $appName --docker-container-logging filesystem
+
+

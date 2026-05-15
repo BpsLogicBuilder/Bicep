@@ -31,4 +31,6 @@ jobs:
 
       # Build and upload image
     - name: Upload Image
-      run: echo "ACR Name ${{ steps.deployStep.outputs.acrLoginServer}}"
+      run: |
+        echo "ACR Name ${{ steps.deployStep.outputs.acrLoginServer}}"
+        az acr build --registry ${{ steps.deployStep.outputs.acrLoginServer}} --image webapplication1:v1.0.0 --image webapplication1:latest ./WebApplication1
