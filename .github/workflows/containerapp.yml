@@ -45,7 +45,7 @@ jobs:
 
     - name: Upload Private Image
       env:
-        ACR_LOGIN_SERVER: ${{ steps.deployAcrStep.outputs.acrLoginServer}}"
+        ACR_LOGIN_SERVER: ${{ steps.deployAcrStep.outputs.acrLoginServer}}
       run: |
         echo "ACR Name ${{ env.ACR_LOGIN_SERVER }}"
         az acr build --registry ${{ env.ACR_LOGIN_SERVER }} --image webapplication1:v1.0.${{ github.run_number }} --image webapplication1:latest ./WebApplication1
