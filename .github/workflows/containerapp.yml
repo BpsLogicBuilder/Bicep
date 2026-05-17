@@ -1,0 +1,59 @@
+on: [workflow_dispatch]
+name: Deploy Containerized Web App
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.ARM_DEPLOYER_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Deploy ACR
+      id: deployAcrStep
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./acr/acr.bicep
+        failOnStdErr: false
+
+    - name: Deploy Container App with public image
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./container-apps/container-app-with-public-image.bicep
+        failOnStdErr: false
+
+    - name: Assign Acr Pull Role to Container App
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./container-apps/assign-acr-pull-to-container-app.bicep
+        failOnStdErr: false
+
+    - name: Upload Private Image
+      env:
+        ACR_LOGIN_SERVER: ${{ steps.deployAcrStep.outputs.acrLoginServer}}"
+      run: |
+        echo "ACR Name ${{ env.ACR_LOGIN_SERVER }}"
+        az acr build --registry ${{ env.ACR_LOGIN_SERVER }} --image webapplication1:v1.0.${{ github.run_number }} --image webapplication1:latest ./WebApplication1
+
+    - name: Update Container App image source to private image
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./container-apps/container-app-with-private-image.bicep
+        failOnStdErr: false

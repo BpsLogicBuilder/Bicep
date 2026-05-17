@@ -1,6 +1,6 @@
 $rg = "rg-cli"
-$acrName = "bpsacrcli05152026"
-$acaEnv = "bps-aca-env-05152026"
+$acrName = "bpsacrcli05172026"
+$acaEnv = "bps-aca-env-05172026"
 $location = "eastus"
 $containerAppName = "webapplication1"
 
