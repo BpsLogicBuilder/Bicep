@@ -1,5 +1,5 @@
 on: [workflow_dispatch]
-name: Deploy Containerized Web App
+name: Deploy Container App
 
 jobs:
   build-and-deploy:
