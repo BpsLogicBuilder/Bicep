@@ -1,0 +1,49 @@
+$rg = "rg-cli"
+$acrName = "bpsacrcli05172026"
+$acaEnv = "bps-aca-env-05172026"
+$location = "eastus"
+$containerAppName = "webapplication1"
+
+az acr create --resource-group $rg --name $acrName --sku Basic --output none
+
+//From repository root folder
+az acr build --registry $acrName --image "$($containerAppName):v1.0.1" --image "$($containerAppName):latest" ./WebApplication1
+
+//Create container app environment
+az containerapp env create --name $acaEnv --resource-group $rg --location $location
+
+$acrServer = "$acrName.azurecr.io"
+$containerImageFqdn = "$acrServer/$($containerAppName):latest"
+
+//Create container app
+az containerapp create --name $containerAppName --resource-group $rg --environment $acaEnv --image $containerImageFqdn --registry-server $acrServer --registry-identity system --system-assigned --ingress external --target-port 8080 --min-replicas 1 --max-replicas 3 
+
+//Below did not work in powershell
+#az containerapp create `
+#    --name $containerAppName `
+#    --resource-group $rg `
+#    --environment $acaEnv `
+#    --image $containerImageFqdn `
+#    --registry-server $acrServer `
+#    --registry-identity system `
+#    --system-assigned `
+#    --ingress external `
+#    --target-port 8080 `
+#    --min-replicas 1 `
+#    --max-replicas 3 
+
+//Assign AcrPull permisions for the ACR to the container app
+$principalId = az containerapp identity show --resource-group $rg --name $containerAppName --query principalId --output tsv
+$acrId = az acr show --resource-group $rg --name $acrName --query id --output tsv
+az role assignment create --assignee $principalId --role "AcrPull" --scope $acrId
+
+$containerAppFqdn = az containerapp show `
+        --name $containerAppName `
+        --resource-group $rg `
+        --query "properties.configuration.ingress.fqdn" `
+        --output tsv 2>$null
+
+$FQDN = az containerapp show -n $containerAppName -g $rg `
+    --query properties.configuration.ingress.fqdn -o tsv
+
+Write-Output $FQDN

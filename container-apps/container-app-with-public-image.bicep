@@ -13,8 +13,11 @@ param location string = resourceGroup().location
 @description('Specifies the docker container image to deploy.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
+@description('Revision suffix.')
+param revisionSuffix string = toLower('rev-${utcNow()}')
+
 @description('Specifies the container port.')
-param targetPort int = 80
+param targetPort int = 8080
 
 @description('Number of CPU cores the container can use. Can be with a maximum of two decimals.')
 @allowed([
@@ -81,6 +84,9 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2022-06-01-preview' 
 resource containerApp 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: containerAppName
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     managedEnvironmentId: containerAppEnv.id
     configuration: {
@@ -97,7 +103,7 @@ resource containerApp 'Microsoft.App/containerApps@2022-06-01-preview' = {
       }
     }
     template: {
-      revisionSuffix: 'firstrevision'
+      revisionSuffix: revisionSuffix
       containers: [
         {
           name: containerAppName

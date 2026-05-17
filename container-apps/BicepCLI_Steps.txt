@@ -1,0 +1,17 @@
+$rg = "rg-testbicep"
+az deployment group create --resource-group $rg --template-file acr/acr.bicep
+
+//Create container app environment and container app using a public image
+az deployment group create --resource-group $rg --template-file container-apps/container-app-with-public-image.bicep
+
+//Look up $acrName from the portal
+$acrName="bpscrqbdozxe5lmnsc"
+
+//From repository root folder
+az acr build --registry $acrName --image webapplication1:v1.0.0 --image webapplication1:latest ./WebApplication1
+
+//Assign AcrPull permissions for the ACR
+az deployment group create --resource-group $rg --template-file container-apps/assign-acr-pull-to-container-app.bicep
+
+//Update the container to use the private image
+az deployment group create --resource-group $rg --template-file container-apps/container-app-with-private-image.bicep
