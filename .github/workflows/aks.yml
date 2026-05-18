@@ -1,0 +1,78 @@
+on: [workflow_dispatch]
+name: Deploy AKS Cluster
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.ARM_DEPLOYER_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Deploy ACR
+      id: deployAcrStep
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./acr/acr.bicep
+        failOnStdErr: false
+
+    - name: Upload Private Image
+      env:
+        ACR_LOGIN_SERVER: ${{ steps.deployAcrStep.outputs.acrLoginServer}}
+      run: |
+        echo "ACR Name ${{ env.ACR_LOGIN_SERVER }}"
+        az acr build --registry ${{ env.ACR_LOGIN_SERVER }} --image webapplication1:v1.0.${{ github.run_number }} --image webapplication1:latest ./WebApplication1
+
+    - name: Deploy AKS Cluster
+      id: deployClusterStep
+      uses: azure/arm-deploy@v1
+      env:
+        ACR_NAME: ${{ steps.deployAcrStep.outputs.acrName }}
+        AKS_SSH_KEY: ${{ secrets.AKS_SSH_KEY }}
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        parameters: >
+          dnsPrefix=${{ env.ACR_NAME }}
+          linuxAdminUsername="azureuser"
+          sshRSAPublicKey=${{ env.AKS_SSH_KEY}}
+        template: ./kubernetes/k8s.bicep
+        failOnStdErr: false
+
+    - name: Assign Acr Pull Role to Kublet Identity
+      uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RG }}
+        template: ./kubernetes/assign-acr-pull-to-aks.bicep
+        failOnStdErr: false
+
+    - name: Get AKS Credentials
+      env:
+        RESOURCE_GROUP: ${{ secrets.AZURE_RG }}
+        AKS_CLUSTER_NAME: ${{ steps.deployClusterStep.outputs.aksClusterName }}
+      run: |
+        az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }}
+
+    - name: Apply Manifests
+      uses: azure/k8s-deploy@v5
+      env:
+        ACR_LOGIN_SERVER: ${{ steps.deployAcrStep.outputs.acrLoginServer}}
+      with:
+        manifests: |
+          kubernetes/deployment.yaml
+          kubernetes/service.yaml
+        images: |
+          ${{ env.ACR_LOGIN_SERVER }}/webapplication1:latest

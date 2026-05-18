@@ -21,7 +21,7 @@ spec:  # Desired state specification for the deployment
       # BEGIN: Container specification
       containers:  # List of containers to run in the pod
       - name: api
-        image: bpscrqbdozxe5lmnsc.azurecr.io/webapplication1:latest  # Container image from ACR
+        image: ACR_NAME.azurecr.io/webapplication1:latest  # Container image from ACR
         imagePullPolicy: Always  # Always pull the latest image from registry
         ports:  # Ports exposed by the container
         - name: http

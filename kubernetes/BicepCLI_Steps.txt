@@ -4,7 +4,7 @@ az deployment group create --resource-group $rg --template-file acr/acr.bicep
 //Look up $acrName from the portal
 $acrName="bpscrqbdozxe5lmnsc"
 //Derive $aksCluster using the same suffix
-$aksCluster = "bps-aks-qbdozxe5lmnsc"
+$aksCluster="bps-aks-qbdozxe5lmnsc"
 
 //From repository root folder
 az acr build --registry $acrName --image webapplication1:v1.0.0 --image webapplication1:latest ./WebApplication1
@@ -18,6 +18,11 @@ az deployment group create --resource-group $rg --template-file kubernetes/assig
 az aks get-credentials --resource-group $rg --name $aksCluster --overwrite-existing
 
 //Image deployment
+#sed -e "s|ACR_NAME|${acr_name}|g" kubernetes/deployment.yaml | kubectl apply -f - -n default
+$deploymentContent = Get-Content kubernetes/deployment.yaml -Raw
+$deploymentContent = $deploymentContent -replace "ACR_NAME", $acrName
+$deploymentContent | kubectl apply -f - -n default
+
 kubectl apply -f kubernetes/deployment.yaml -n default
 
 //Service Deployment

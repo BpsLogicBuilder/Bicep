@@ -17,3 +17,4 @@ resource acr 'Microsoft.ContainerRegistry/registries@2025-11-01' = {
 
 @description('Output the login server property for later use')
 output acrLoginServer string = acr.properties.loginServer
+output acrName string = substring(acr.properties.loginServer, 0, indexOf(acr.properties.loginServer, '.')) 
