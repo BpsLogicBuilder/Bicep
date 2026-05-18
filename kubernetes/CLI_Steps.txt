@@ -1,0 +1,22 @@
+$rg = "rg-cli"
+$acrName = "bpsacrcli05182026"
+$location = "eastus2"
+$containerAppName = "webapplication1"
+$aksCluster = "bps-aks-05182026"
+
+az acr create --resource-group $rg --name $acrName --sku Basic --output none
+
+//From repository root folder
+az acr build --registry $acrName --image "$($containerAppName):v1.0.0" --image "$($containerAppName):latest" ./WebApplication1
+
+//Create AKS cluster
+az aks create --resource-group $rg --name $aksCluster --node-count 1 --vm-set-type VirtualMachineScaleSets --node-vm-size standard_d2ads_v7 --load-balancer-sku standard --enable-managed-identity --network-plugin azure --generate-ssh-keys --attach-acr $acrName
+
+//Get AKS credentials
+az aks get-credentials --resource-group $rg --name $aksCluster --overwrite-existing
+
+//Image deployment
+kubectl apply -f kubernetes/deployment.yaml -n default
+
+//Service Deployment
+kubectl apply -f kubernetes/service.yaml -n default
