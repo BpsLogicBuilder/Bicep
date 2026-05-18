@@ -44,7 +44,7 @@ jobs:
       with:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ secrets.AZURE_RG }}
-        parameters: "dnsPrefix=${{ env.ACR_NAME }} linuxAdminUsername=azureuser sshRSAPublicKey=${{ env.AKS_SSH_KEY}}"
+        parameters: dnsPrefix=${{ env.ACR_NAME }} linuxAdminUsername=azureuser sshRSAPublicKey="${{ env.AKS_SSH_KEY }}"
         template: ./kubernetes/k8s.bicep
         failOnStdErr: false
 
