@@ -1,5 +1,5 @@
 @description('The name of the Managed Cluster resource.')
-param clusterName string = 'aks101cluster'
+param clusterName string = 'bps-aks-${uniqueString(resourceGroup().id)}'
 
 @description('The location of the Managed Cluster resource.')
 param location string = resourceGroup().location
