@@ -1,0 +1,25 @@
+$rg = "rg-cli"
+$location = "eastus2"
+$accountName = "bps-cosmos-rag-05192026"
+$databaseName = "ragstore"
+$containerName = "chunks"
+
+//Create the account
+az cosmosdb create --resource-group $rg --name $accountName --locations regionName=$location --capabilities EnableServerless --default-consistency-level Session
+
+//Create the database
+az cosmosdb sql database create --resource-group $rg --account-name $accountName --name $databaseName
+
+//Create a container specifying a partition key
+az cosmosdb sql container create --resource-group $rg --account-name $accountName --database-name $databaseName --name $containerName --partition-key-path "/documentId"
+
+//Assign Cosmos DB Built-in Data Contributor to signed in user
+$cosmosRoleName = "Cosmos DB Built-in Data Contributor"
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+$accountId = (az cosmosdb show --resource-group $rg --name $accountName --query "id" -o tsv)
+echo "userObjectId $userObjectId"
+echo "accountId $accountId"
+az cosmosdb sql role assignment create --resource-group $rg --account-name $accountName --role-definition-name "$cosmosRoleName" --principal-id $userObjectId --scope $accountId
+
+
+az cosmosdb show --name $accountName --resource-group $rg --query "documentEndpoint" --output tsv

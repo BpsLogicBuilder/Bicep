@@ -1,0 +1,19 @@
+$rg = "rg-testbicep"
+
+//Create aosmos-db account, database and container.
+az deployment group create --resource-group $rg --template-file cosmos-db-nosql/cosmos-db-nosql.bicep
+
+$cosmosRoleName = "Cosmos DB Built-in Data Contributor"
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+$accountName = "sql-uouxshlqhqmbs"
+$accountId = (az cosmosdb show --resource-group $rg --name $accountName --query "id" -o tsv)
+echo "userObjectId $userObjectId"
+echo "accountId $accountId"
+
+az cosmosdb sql role assignment create --resource-group $rg --account-name $accountName --role-definition-name "$cosmosRoleName" --principal-id $userObjectId --scope $accountId
+
+#.\CosmosDbNoSqlClient\CosmosDbNoSqlClient\bin\Debug\net10.0\CosmosDbNoSqlClient
+#DotEnv.Load(); only works if it exists in the current folder
+
+CD CosmosDbNoSqlClient\CosmosDbNoSqlClient\bin\Debug\net10.0
+.\CosmosDbNoSqlClient
