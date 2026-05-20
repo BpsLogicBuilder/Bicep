@@ -1,0 +1,18 @@
+$rg="rg-cli"
+$location="eastus"
+$cache_name="bps-redis-cache-05202026"
+
+//Create the Redis Enterprise cluster with public network access enabled
+az redisenterprise create --resource-group $rg --name $cache_name --location $location --sku "Balanced_B0" --public-network-access "Enabled" --client-protocol "Encrypted" --clustering-policy "NoCluster" --eviction-policy "AllKeysLRU" --port 10000
+
+//Enable access key authentication on the cluster to trigger key generation
+az redisenterprise database update --resource-group $rg --cluster-name $cache_name --access-keys-auth "Enabled"
+
+$hostname = az redisenterprise show --resource-group $rg --name $cache_name --query "hostName" -o tsv
+$primaryKey = az redisenterprise database list-keys --cluster-name $cache_name -g $rg --query "primaryKey" -o tsv
+
+//For Ebtra authentication go to the Azure Managed Redis resource in the portal, selct Settings -> Authentication and add a user or managed identity.
+
+//Finally:
+	await configurationOptions.ConfigureForAzureWithTokenCredentialAsync(new DefaultAzureCredential());
+	ConnectionMultiplexer connection = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
