@@ -1,0 +1,4 @@
+$rg = "rg-bicep"
+
+//Create Managed Redis cluster and assign access to a user.
+az deployment group create --resource-group $rg --template-file redis/managed-redis-with-access-assignment.bicep --parameters accessAssignmentPrincipalId=principalIdForUser

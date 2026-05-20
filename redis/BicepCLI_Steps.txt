@@ -1,0 +1,6 @@
+$rg = "rg-testbicep"
+
+//Create Managed Redis cluster and assign access to a user.
+az deployment group create --resource-group $rg --template-file redis/managed-redis.bicep
+
+//See CLI_Steps.txt for EntraID access or Key access.
