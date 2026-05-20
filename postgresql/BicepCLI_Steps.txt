@@ -1,0 +1,24 @@
+$rg = "rg-bicep"
+
+//Create aosmos-db account, database and container.
+az deployment group create --resource-group $rg --template-file postgresql/postgresql-entra-auth-enabled-password-auth-disabled.bicep
+
+$serverName = "bps-psql-uouxshlqhqmbs"
+$userUpn = (az ad signed-in-user show --query userPrincipalName -o tsv)
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+echo "userUpn $userUpn"
+echo "userObjectId $userObjectId"
+echo "serverName $serverName"
+
+az postgres flexible-server microsoft-entra-admin create --resource-group $rg --server-name $serverName --display-name "$userUpn" --object-id "$userObjectId"
+
+$env:PGPASSWORD=(az account get-access-token --resource-type oss-rdbms --query accessToken -o tsv)
+$env:DB_HOST="bps-psql-uouxshlqhqmbs.postgres.database.azure.com"
+$env:DB_NAME="postgres"
+$env:DB_USER=$userUpn
+echo "env:DB_HOST $env:DB_HOST"
+echo "env:DB_NAME $env:DB_NAME"
+echo "env:DB_USER $env:DB_USER"
+echo "PGPASSWORD $env:PGPASSWORD"
+
+psql "host=$env:DB_HOST port=5432 dbname=$env:DB_NAME user=$env:DB_USER sslmode=require"
