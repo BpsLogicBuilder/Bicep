@@ -1,0 +1,15 @@
+$rg = "rg-cli"
+$location = "centralus"
+$serverName = "psql-agent-05202026"
+
+//Create Azure Database for PostgreSQL Flexible Server
+az postgres flexible-server create --resource-group $rg --name $serverName --location $location --sku-name Standard_B1ms --tier Burstable --storage-size 32 --version 16 --public-access 0.0.0.0-255.255.255.255 --microsoft-entra-auth Enabled --password-auth Disabled
+
+
+$userUpn = (az ad signed-in-user show --query userPrincipalName -o tsv)
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+
+echo "userUpn $userUpn"
+echo "userObjectId $userObjectId"
+
+az postgres flexible-server microsoft-entra-admin create --resource-group $rg --server-name $serverName --display-name "$userUpn" --object-id "$userObjectId"

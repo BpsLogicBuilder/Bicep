@@ -1,0 +1,4 @@
+$rg = "rg-testbicep"
+
+//Create aosmos-db account, database and container.
+az deployment group create --resource-group $rg --template-file postgresql/postgresql-with-entra-administrator.bicep --parameters aadAdminObjectid=myProncipalIdGuid aadAdminName=myEmail
