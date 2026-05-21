@@ -1,0 +1,28 @@
+$rg = "rg-cli"
+$location = "eastus2"
+$namespaceName = "bps-service-bus-05202026"
+
+//Create Service Bus Namespace
+az servicebus namespace create --name $namespaceName --resource-group $rg --location $location --sku Standard
+
+//Create queue with dead-lettering configured
+az servicebus queue create --name inference-requests --namespace-name $namespaceName --resource-group $rg --max-delivery-count 5 --enable-dead-lettering-on-message-expiration true
+
+//Create topic
+az servicebus topic create --name inference-results --namespace-name $namespaceName --resource-group $rg
+
+//Create notifications subscription (receives all messages)
+az servicebus topic subscription create --name notifications --topic-name inference-results --namespace-name $namespaceName --resource-group $rg
+
+//Create high-priority subscription (filtered)
+az servicebus topic subscription create --name high-priority --topic-name inference-results --namespace-name $namespaceName --resource-group $rg
+
+//Configure SQL filter on high-priority subscription
+//Remove default rule
+az servicebus topic subscription rule delete --name '$Default' --subscription-name high-priority --topic-name inference-results --namespace-name $namespaceName --resource-group $rg
+az servicebus topic subscription rule create --name high-priority-filter --subscription-name high-priority --topic-name inference-results --namespace-name $namespaceName --resource-group $rg --filter-sql-expression "priority = 'high'"
+
+$nsId = az servicebus namespace show --resource-group $rg --name $namespaceName --query "id" -o tsv
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+
+az role assignment create --role "Azure Service Bus Data Owner" --assignee "$userObjectId" --scope "$nsId"

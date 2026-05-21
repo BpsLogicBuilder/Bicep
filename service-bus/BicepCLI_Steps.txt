@@ -1,0 +1,12 @@
+$rg = "rg-bicep"
+
+//Create Serice Bus Namespace, Queues and Topics.
+az deployment group create --resource-group $rg --template-file service-bus/service-bus.bicep
+
+//Role is for the signed in user - not a managed identity - better to assign outsie the template
+//Lookup the namespace in the portal
+$namespaceName="bps-service-bus-uouxshlqhqmbs"
+$nsId = az servicebus namespace show --resource-group $rg --name $namespaceName --query "id" -o tsv
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+
+az role assignment create --role "Azure Service Bus Data Owner" --assignee "$userObjectId" --scope "$nsId"
