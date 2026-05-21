@@ -1,0 +1,16 @@
+$rg = "rg-bicep"
+
+//Create Event Grid Namespace, Topic and subscriptions.
+az deployment group create --resource-group $rg --template-file event-grid/event-grid.bicep
+
+//Assigning permissions to users should stay outside the CI/DD workflows
+//Lookup namespaceName in the portal
+$namespaceName = ""
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+$nsId = az eventgrid namespace show --resource-group $rg --name $namespaceName --query "id" -o tsv
+
+//Assign EventGrid Data Sender role to the signed in use (namespace scope)
+az role assignment create --role "EventGrid Data Sender" --assignee "$userObjectId" --scope "$nsId"
+
+//Assign EventGrid Data Receiver role to the signed in use (namespace scope)
+az role assignment create --role "EventGrid Data Receiver" --assignee "$userObjectId" --scope "$nsId"
