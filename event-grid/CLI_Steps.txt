@@ -1,0 +1,31 @@
+$rg = "rg-cli"
+$location = "eastus2"
+$namespaceName = "bps-event-grid-05212026"
+$topicName = "moderation-events"
+$subFlagged = "sub-flagged"
+$subApproved = "sub-approved"
+$subAll = "sub-all-events"
+
+//Create Event Grid namespace
+az eventgrid namespace create --name $namespaceName --resource-group $rg --location $location --sku "{name:standard,capacity:1}"
+
+//Create the topic
+az eventgrid namespace topic create --name $topicName --namespace-name $namespaceName --resource-group $rg --event-retention-in-days 1 --publisher-type Custom --input-schema CloudEventSchemaV1_0
+
+//Create Subscription for flagged content only
+az eventgrid namespace topic event-subscription create --name $subFlagged --namespace-name $namespaceName --resource-group $rg --topic-name $topicName --delivery-configuration "{deliveryMode:Queue,queue:{receiveLockDurationInSeconds:60,maxDeliveryCount:10,eventTimeToLive:P1D}}" --event-delivery-schema CloudEventSchemaV1_0 --filters-configuration "{includedEventTypes:['com.contoso.ai.ContentFlagged']}"
+
+//Create Subscription for approved content only
+az eventgrid namespace topic event-subscription create --name $subApproved --namespace-name $namespaceName --resource-group $rg --topic-name $topicName --delivery-configuration "{deliveryMode:Queue,queue:{receiveLockDurationInSeconds:60,maxDeliveryCount:10,eventTimeToLive:P1D}}" --event-delivery-schema CloudEventSchemaV1_0 --filters-configuration "{includedEventTypes:['com.contoso.ai.ContentApproved']}"
+
+//Create Subscription for all events (no filter — audit log)
+az eventgrid namespace topic event-subscription create --name $subAll --namespace-name $namespaceName --resource-group $rg --topic-name $topicName --delivery-configuration "{deliveryMode:Queue,queue:{receiveLockDurationInSeconds:60,maxDeliveryCount:10,eventTimeToLive:P1D}}" --event-delivery-schema CloudEventSchemaV1_0
+
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+$nsId = az eventgrid namespace show --resource-group $rg --name $namespaceName --query "id" -o tsv
+
+//Assign EventGrid Data Sender role to the signed in use (namespace scope)
+az role assignment create --role "EventGrid Data Sender" --assignee "$userObjectId" --scope "$nsId"
+
+//Assign EventGrid Data Receiver role to the signed in use (namespace scope)
+az role assignment create --role "EventGrid Data Receiver" --assignee "$userObjectId" --scope "$nsId"
