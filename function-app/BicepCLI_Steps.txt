@@ -1,0 +1,66 @@
+$rg = "rg-bicep"
+
+//Create Event Grid Namespace, Topic and subscriptions.
+az deployment group create --resource-group $rg --template-file function-app/function-app.bicep
+
+Deploy the MCP server project
+	In the VS Code command palette, enter and then select Azure Functions: Deploy to Function App.
+	Select the function app you just created. When prompted about overwriting previous deployments, select Deploy to deploy your function code to the new function app resource.
+
+Configure authentication on function app in the Azure portal
+	Go to Settings > Authentication
+	Add identity provider > Microsoft as the identity provider.
+	For Choose a tenant for your application and its users, select Workforce configuration (current tenant).
+
+	App registration: use these settings:
+		(Setting) -- (Selection)
+		App registration type -- Create new app registration (Appears to be a chicken and egg problem with using an existing app registration.  The redirect URI depends on the function app name - which in turn depends on the resource group in a CI/CD workflow.  I had difficulty setting this value on an existing app using bicep - also there appears)
+		Name -- Enter a descriptive name for your app
+		Client secret expiration -- Recommended: 180 days
+		Supported account types -- Current tenant - Single tenant
+
+	For Client application requirement select Allow requests from specific client applications, select the pencil icon, add the Visual Studio Code client ID aebc6443-996d-45c2-90f0-388ff96faa56. To test an MCP Server from the Foundry playground, change this selection to "Allow requests from any application" and assign the Foundry project Website Contributor access to the function app resource.
+
+	Under App Service authentication settings use these settings:
+		(Setting) -- (Selection)
+		Restrict access -- Require authentication
+		Unauthenticated requests -- HTTP 401 Unauthorized: recommended for APIs
+		Token store -- Check the box, which allows token refresh
+
+	Select Add.
+
+Preauthorize Visual Studio Code as client
+	Select the name of the Entra app next to Microsoft. This action takes you to the Overview of the Entra app resource.
+	Go to Manage > Expose an API.
+	Under Authorized client applications, select +Add a client application.
+	Enter Visual Studio Code's client ID: aebc6443-996d-45c2-90f0-388ff96faa56.
+	Select the box in front of the scope that looks like api://abcd123-efg456-hijk-7890123/user_impersonation.
+	Select Add application.
+
+Configure protected resource metadata (preview)
+	In the same Expose an API view, find the Scopes section, and copy the scope that allows admins and users to consent to the Entra app. This value looks like api://abcd123-efg456-hijk-7890123/user_impersonation.
+
+	Login to Azure and run the following command:
+		az functionapp config appsettings set --name <function-app-name> --resource-group <resource-group-name> --settings "WEBSITE_AUTH_PRM_DEFAULT_WITH_SCOPES=<scope>"
+
+Connect to server
+	Open mcp.json inside the .vscode directory.
+	Select the "Start" button above the deployed MCP server name.
+
+Configure Microsoft Foundry agent to use your tools
+	In the Function app resource
+	Go to Settings > Authentication and select the Edit button for the Microsoft Identity Provider
+	For Client application requirement change the selected option to "Allow requests from any application"
+	Login to ai.azure.com, create a Foundry project and add an agent to the project
+	Back in the Azure portal's Function app resource page, assign the Foundry project Website Contributor access to the function app resource in the Access Control (IAM) section.
+	In the foundry project (ai.azure.com) Add a custom tool using your function app as an MCP tool. Select the Custom tab, then select Model Context Protocol (MCP) and the Create button.
+	Fill in the following:
+		Name: Name of the server
+		Remote MCP Server endpoint: the MCP extension server (https://<server domain>/runtime/webhooks/mcp)
+		Authentication: Choose "Microsoft Entra"
+		Type: Choose "Project Managed Identity"
+		Audience: This is the Entra App ID URI e.g. api://<App ID Guid>
+
+	
+
+	
