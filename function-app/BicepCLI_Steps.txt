@@ -1,6 +1,6 @@
 $rg = "rg-bicep"
 
-//Create Event Grid Namespace, Topic and subscriptions.
+//Create Function App
 az deployment group create --resource-group $rg --template-file function-app/function-app.bicep
 
 Deploy the MCP server project

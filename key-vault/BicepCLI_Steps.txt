@@ -1,0 +1,12 @@
+$rg = "rg-bicep"
+
+//Create Keyvault
+az deployment group create --resource-group $rg --template-file key-vault/key-vault.bicep --parameters key-vault/key-vault.bicepparam
+
+az deployment group what-if --resource-group $rg --template-file key-vault/key-vault.bicep --parameters key-vault/key-vault.bicepparam
+
+$kvName = "bps-kv-uouxshlqhqmbs"
+$kvId = az keyvault show --resource-group $rg --name $kvName --query "id" -o tsv
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+
+az role assignment create --role "Key Vault Secrets Officer" --assignee "$userObjectId" --scope "$kvId"
