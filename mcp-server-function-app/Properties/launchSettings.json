@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "csharp_mcp_server_function": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7270",
+      "launchBrowser": false
+    }
+  }
+}

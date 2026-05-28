@@ -1,0 +1,92 @@
+{
+    "servers": {
+        "csharp-mcp-server-function-local-server": {
+            "type": "http",
+            "url": "http://localhost:7071/runtime/webhooks/mcp"
+        },
+        "bps-app-05252026-remote-server": {
+            "type": "http",
+            "url": "https://bps-app-05252026-e6d9dpgsdrd5ducy.eastus-01.azurewebsites.net/runtime/webhooks/mcp",
+            "headers": {
+                "x-functions-key": "${input:bps-app-05252026McpHostKey}"
+            }
+        },
+        "bps-app-nsnzhmeqbgjsu-remote-server": {
+            "type": "http",
+            "url": "https://bps-app-nsnzhmeqbgjsu.azurewebsites.net/runtime/webhooks/mcp",
+            "headers": {
+                "x-functions-key": "${input:bps-app-nsnzhmeqbgjsuMcpHostKey}"
+            }
+        },
+        "bps-azure-functions-app-05272026-remote-server": {
+            "type": "http",
+            "url": "https://bps-azure-functions-app-05272026-fybmgubzb4fteyas.eastus2-01.azurewebsites.net/runtime/webhooks/mcp",
+            "headers": {
+                "x-functions-key": "${input:bps-azure-functions-app-05272026McpHostKey}"
+            }
+        },
+        "bps-app-uouxshlqhqmbs-remote-server": {
+            "type": "http",
+            "url": "https://bps-app-uouxshlqhqmbs.azurewebsites.net/runtime/webhooks/mcp",
+            "headers": {
+                "x-functions-key": "${input:bps-app-uouxshlqhqmbsMcpHostKey}"
+            }
+        }
+    },
+    "inputs": [
+        {
+            "type": "command",
+            "id": "bps-app-05252026McpHostKey",
+            "command": "azureFunctions.getMcpHostKey",
+            "args": {
+                "resourceId": "/subscriptions/2d8d23ce-440a-46ae-b5dd-335a7b2109a9/resourceGroups/rg-fromportal/providers/Microsoft.Web/sites/bps-app-05252026",
+                "projectType": "McpExtensionServer"
+            }
+        },
+        {
+            "type": "command",
+            "id": "bps-app-uouxshlqhqmbsMcpHostKey",
+            "command": "azureFunctions.getMcpHostKey",
+            "args": {
+                "resourceId": "/subscriptions/2d8d23ce-440a-46ae-b5dd-335a7b2109a9/resourceGroups/rg-bicep/providers/Microsoft.Web/sites/bps-app-uouxshlqhqmbs",
+                "projectType": "McpExtensionServer"
+            }
+        },
+        {
+            "type": "command",
+            "id": "bps-app-qbdozxe5lmnscMcpHostKey",
+            "command": "azureFunctions.getMcpHostKey",
+            "args": {
+                "resourceId": "/subscriptions/2d8d23ce-440a-46ae-b5dd-335a7b2109a9/resourceGroups/rg-testbicep/providers/Microsoft.Web/sites/bps-app-qbdozxe5lmnsc",
+                "projectType": "McpExtensionServer"
+            }
+        },
+        {
+            "type": "command",
+            "id": "bps-app-nsnzhmeqbgjsuMcpHostKey",
+            "command": "azureFunctions.getMcpHostKey",
+            "args": {
+                "resourceId": "/subscriptions/2d8d23ce-440a-46ae-b5dd-335a7b2109a9/resourceGroups/rg-bicep2/providers/Microsoft.Web/sites/bps-app-nsnzhmeqbgjsu",
+                "projectType": "McpExtensionServer"
+            }
+        },
+        {
+            "type": "command",
+            "id": "bps-azure-functions-app-05272026McpHostKey",
+            "command": "azureFunctions.getMcpHostKey",
+            "args": {
+                "resourceId": "/subscriptions/2d8d23ce-440a-46ae-b5dd-335a7b2109a9/resourceGroups/rg-portal/providers/Microsoft.Web/sites/bps-azure-functions-app-05272026",
+                "projectType": "McpExtensionServer"
+            }
+        },
+        {
+            "type": "command",
+            "id": "bps-app-uouxshlqhqmbsMcpHostKey",
+            "command": "azureFunctions.getMcpHostKey",
+            "args": {
+                "resourceId": "/subscriptions/2d8d23ce-440a-46ae-b5dd-335a7b2109a9/resourceGroups/rg-bicep/providers/Microsoft.Web/sites/bps-app-uouxshlqhqmbs",
+                "projectType": "McpExtensionServer"
+            }
+        }
+    ]
+}
