@@ -1,0 +1,15 @@
+$rg = "rg-cli"
+$location = "eastus"
+$kvName = "bps-kv-05282026"
+
+az keyvault create --name $kvName --resource-group $rg --location $location --enable-rbac-authorization true
+
+$userUpn = az ad signed-in-user show --query userPrincipalName -o tsv
+$kvId = az keyvault show --resource-group $rg --name $kvName --query "id" -o tsv
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+
+az role assignment create --role "Key Vault Secrets Officer" --assignee "$userObjectId" --scope "$kvId"
+
+az keyvault secret set --vault-name $kvName --name "openai-api-key" --value "sk-proj-abc123def456ghi789jkl012mno345pqr678stu901vwx" --content-type "application/x-api-key" --tags environment=development service=openai
+
+az keyvault secret set --vault-name $kvName --name "cosmosdb-connection-string" --value "AccountEndpoint=https://mycosmosdb.documents.azure.com:443/;AccountKey=abc123def456ghi789==" --content-type "application/x-connection-string" --tags environment=development service=cosmosdb
