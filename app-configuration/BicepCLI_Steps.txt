@@ -1,0 +1,19 @@
+$rg = "rg-bicep"
+
+//Create Keyvault
+az deployment group create --resource-group $rg --template-file key-vault/key-vault.bicep --parameters key-vault/key-vault.bicepparam
+
+//The following group of steps are just for getting the key vault URI to access an app configuration key whose value is in the key vault
+$kvName = 'bps-kv-uouxshlqhqmbs' //Lookup keyvault name in the portal
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)//look up object id for signed in use
+$kvId = az keyvault show --resource-group $rg --name $kvName --query "id" -o tsv
+az role assignment create --role "Key Vault Secrets Officer" --assignee "$userObjectId" --scope "$kvId" //assign role
+$secretUri = az keyvault secret show --vault-name $kvName --name "openai-api-key" --query "id" -o tsv //get the secretUri
+//Finally update the openai-api-key value in app-configuration.bicepparam
+
+//Create App Config
+az deployment group create --resource-group $rg --template-file app-configuration/app-configuration.bicep --parameters app-configuration/app-configuration.bicepparam
+
+$appconfigName = 'bps-appconfig-uouxshlqhqmbs'
+$acId = az appconfig show --resource-group $rg --name $appconfigName --query "id" -o tsv
+az role assignment create --role "App Configuration Data Owner" --assignee "$userObjectId" --scope "$acId"
