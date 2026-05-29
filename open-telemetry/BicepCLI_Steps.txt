@@ -1,0 +1,9 @@
+$rg = "rg-bicep" 
+
+//Create Event Grid Namespace, Topic and subscriptions.
+az deployment group create --resource-group $rg --template-file open-telemetry/open-telemetry.bicep
+
+//Assign Monitoring Metrics Publisher role to signed in user
+$appinsightsName = 'bps-appi-uouxshlqhqmbs'
+$appiId = az monitor app-insights component show --resource-group $rg --app $appinsightsName --query "id" -o tsv
+az role assignment create --role "Monitoring Metrics Publisher" --assignee "$userObjectId" --scope "$appiId"
