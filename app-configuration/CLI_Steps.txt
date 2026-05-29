@@ -1,0 +1,35 @@
+$rg = "rg-cli"
+$location = "eastus2"
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+$appconfigName = "bps-appconfig-05292026"
+$kvName = "bps-kv-05292026"
+
+//Create app config
+az appconfig create --name $appconfigName --resource-group $rg --location $location --sku Standard
+
+//Create key vault
+az keyvault create --name $kvName --resource-group $rg --location $location --enable-rbac-authorization true
+
+//Assign Role
+$acId = az appconfig show --resource-group $rg --name $appconfigName --query "id" -o tsv
+az role assignment create --role "App Configuration Data Owner" --assignee "$userObjectId" --scope "$acId"
+
+//Assign Role
+$kvId = az keyvault show --resource-group $rg --name $kvName --query "id" -o tsv
+az role assignment create --role "Key Vault Secrets Officer" --assignee "$userObjectId" --scope "$kvId"
+
+//Set key-value pairs in app config
+az appconfig kv set --name $appconfigName --key "OpenAI:Endpoint" --value "https://my-openai.openai.azure.com/" --yes
+az appconfig kv set --name $appconfigName --key "OpenAI:DeploymentName" --value "gpt-4o" --yes
+az appconfig kv set --name $appconfigName --key "Pipeline:BatchSize" --value "10" --yes
+az appconfig kv set --name $appconfigName --key "Pipeline:RetryCount" --value "3" --yes
+az appconfig kv set --name $appconfigName --key "Pipeline:BatchSize" --value "200" --label "Production" --yes
+az appconfig kv set --name $appconfigName --key "Pipeline:RetryCount" --value "5" --label "Production" --yes
+az appconfig kv set --name $appconfigName --key "Sentinel" --value "1" --yes
+
+//Set secet in key vault
+az keyvault secret set --vault-name $kvName --name "openai-api-key" --value "sk-proj-abc123def456ghi789jkl012mno345pqr678stu901vwx" --content-type "application/x-api-key"
+
+//Create Key Vault reference in App Configuration
+$secretUri = az keyvault secret show --vault-name $kvName --name "openai-api-key" --query "id" -o tsv
+az appconfig kv set-keyvault --name $appconfigName --key "OpenAI:ApiKey" --secret-identifier "$secretUri" --yes
