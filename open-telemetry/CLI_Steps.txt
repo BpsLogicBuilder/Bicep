@@ -1,0 +1,11 @@
+$rg = "rg-cli" 
+$location = "eastus" 
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+$appinsightsName = "bps-appi-05292026"
+
+//Create Application Insights resource
+az monitor app-insights component create --resource-group $rg --app $appinsightsName --location $location
+
+//Assign Monitoring Metrics Publisher role to signed in user
+$appiId = az monitor app-insights component show --resource-group $rg --app $appinsightsName --query "id" -o tsv
+az role assignment create --role "Monitoring Metrics Publisher" --assignee "$userObjectId" --scope "$appiId"
