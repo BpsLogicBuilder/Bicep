@@ -1,4 +1,4 @@
-$rg = "rg-cli" 
+$rg = "rg-cli-1" 
 $location = "eastus" 
 $userObjectId = (az ad signed-in-user show --query "id" -o tsv)
 $appinsightsName = "bps-appi-06042026-1"

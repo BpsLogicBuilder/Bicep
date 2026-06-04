@@ -1,6 +1,6 @@
 $rg = "rg-bicep" 
 
-//Create Event Grid Namespace, Topic and subscriptions.
+//Create Application Insights resource.
 az deployment group create --resource-group $rg --template-file open-telemetry/open-telemetry.bicep
 
 //Assign Monitoring Metrics Publisher role to signed in user
