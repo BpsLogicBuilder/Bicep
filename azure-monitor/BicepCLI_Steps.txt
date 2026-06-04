@@ -8,3 +8,6 @@ $appinsightsName = 'bps-appi-uouxshlqhqmbs'
 $userObjectId = (az ad signed-in-user show --query "id" -o tsv)
 $appiId = az monitor app-insights component show --resource-group $rg --app $appinsightsName --query "id" -o tsv
 az role assignment create --role "Monitoring Metrics Publisher" --assignee "$userObjectId" --scope "$appiId"
+
+//Create Action Group and Alert Rule.
+az deployment group create --resource-group $rg --template-file azure-monitor/action-group.bicep
