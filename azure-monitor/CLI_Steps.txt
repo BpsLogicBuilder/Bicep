@@ -1,0 +1,19 @@
+$rg = "rg-cli" 
+$location = "eastus" 
+$userObjectId = (az ad signed-in-user show --query "id" -o tsv)
+$appinsightsName = "bps-appi-06042026-1"
+
+//Create Application Insights resource
+az monitor app-insights component create --resource-group $rg --app $appinsightsName --location $location
+
+//Assign Monitoring Metrics Publisher role to signed in user
+$appiId = az monitor app-insights component show --resource-group $rg --app $appinsightsName --query "id" -o tsv
+az role assignment create --role "Monitoring Metrics Publisher" --assignee "$userObjectId" --scope "$appiId"
+
+$alertEmail = az account show --query user.name -o tsv
+
+//Create action group
+az monitor action-group create --resource-group $rg --name pipeline-alerts-ag --short-name PipeAlert --action email oncall-email $alertEmail
+
+//Create log search tert rule
+az monitor scheduled-query create --resource-group $rg --name high-failure-rate-alert --scopes $appiId --condition "count 'FailedRequests' > 10" --condition-query FailedRequests="requests | where success == false" --evaluation-frequency 5m --window-size 5m --severity 1 --description "Alert when more than 10 requests fail in a 5-minute window"
